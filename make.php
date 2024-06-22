@@ -79,61 +79,48 @@ function generatePath($maze, $startX, $startY) {
 // Usage
 list($maze, $playerX, $playerY, $playerDir) = generateMaze(30, 30);
 
+for($i=1;$i<=28;$i++){
+	for($j=1;$j<=28;$j++){
+		$maze[$i][$j] = $i==10 ? 0 : $maze[$i][$j];
+	}
+
+}
+
+
 // Load textures
 $files = glob("1400x1400/*.jpg");
 shuffle($files);
 $wallImage = imagecreatefromjpeg($files[0]);
 $groundImage = imagecreatefromjpeg($files[0]);
-$ceilingImage = imagecreatefromjpeg($files[2]);
+$ceilingImage = imagecreatefromjpeg($files[mt_rand(0,1)]);
 
 
 // Image dimensions
 $imageWidth = 1200;
-$imageHeight = 800;
+$imageHeight = 1200;
 
 $path = generatePath($maze, $playerX, $playerY);
 
-function rotateImage($image, $degrees) {
+$path = array_map(fn($x) => [$x+.5, 10.5], range(1, 28));
+$playerDir = -.5;
+$inc = .1;
+$playerX = [1, 10];
 
-    // Get the original dimensions of the image
-    $width = imagesx($image);
-    $height = imagesy($image);
-
-    // Convert degrees to radians
-    $angle = deg2rad($degrees);
-
-    // Calculate new image dimensions
-    $newWidth = ceil(abs($width * cos($angle)) + abs($height * sin($angle)));
-    $newHeight = ceil(abs($width * sin($angle)) + abs($height * cos($angle)));
-
-    // Create a transparent background for the rotated image
-    $rotatedImage = imagecreatetruecolor($newWidth, $newHeight);
-    $bgColor = imagecolorallocatealpha($rotatedImage, 0, 0, 0, 127); // Transparent background
-    imagefill($rotatedImage, 0, 0, $bgColor);
-    imagesavealpha($rotatedImage, true); // Save transparency
-
-    // Rotate the image
-    $rotated = imagerotate($image, $degrees, $bgColor);
-
-    // Copy rotated image onto the blank canvas
-    $offsetX = ($newWidth - $width) / 2;
-    $offsetY = ($newHeight - $height) / 2;
-    imagecopy($rotatedImage, $rotated, $offsetX, $offsetY, 0, 0, $width, $height);
-
-    // Free up memory
-    imagedestroy($image);
-    imagedestroy($rotated);
-
-    return $rotatedImage;
-}
-
-
+$rotate = false;
 foreach($path as $i => $coords){
 
-	if($i === 25) break;
+	if($i === 29) break;
 	echo "Rendering frame $i\n";
 
 	list($playerX, $playerY) = $coords;
+
+	if(mt_rand(0,1))
+//	$playerDir += $inc;
+
+	if($playerDir > .5) $inc = -.1;
+	elseif($playerDir < -.5) $inc = +.1;
+	
+
 
 	// Create a base image
 	$canvas = imagecreatetruecolor($imageWidth, $imageHeight);
@@ -141,8 +128,8 @@ foreach($path as $i => $coords){
 	// Fill the ground and ceiling
 	$groundHeight = $imageHeight / 2;
 	$ceilingHeight = $imageHeight / 2;
-	imagecopyresampled($canvas, $groundImage, 0, $groundHeight, 0, 0, $imageWidth, $groundHeight, imagesx($groundImage), imagesy($groundImage));
-	imagecopyresampled($canvas, $ceilingImage, 0, 0, 0, 0, $imageWidth, $ceilingHeight, imagesx($ceilingImage), imagesy($ceilingImage));
+//	imagecopyresampled($canvas, $groundImage, 0, $groundHeight, 0, 0, $imageWidth, $groundHeight, imagesx($groundImage), imagesy($groundImage));
+//	imagecopyresampled($canvas, $ceilingImage, 0, 0, 0, 0, $imageWidth, $ceilingHeight, imagesx($ceilingImage), imagesy($ceilingImage));
 
 	// Raycasting
 	for ($x = 0; $x < $imageWidth; $x++) {
@@ -232,8 +219,8 @@ foreach($path as $i => $coords){
 	    }
 	}
 
-//	$canvas = rotateImage($canvas, 90);
-
+	$canvas = imagerotate($canvas, $i * 5, null);
+	
 	// Output the result
 	imagejpeg($canvas,'frames/'.$i.'.jpg');
 
