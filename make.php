@@ -1,4 +1,5 @@
 <?php
+require_once(__DIR__."/utils.php");
 shell_exec("rm frames/*.jpg");
 function generateMaze($width, $height) {
     $maze = [];
@@ -86,30 +87,54 @@ for($i=1;$i<=28;$i++){
 
 }
 
-
 // Load textures
-$files = glob("1400x1400/*.jpg");
+//$files = glob("/home/fabio/Documents/imgen/db/1280x720/*.jpg");
+//$files = glob("../imgen/db/*/*.jpg");
+$files = glob("/home/fabio/Documents/traumapacker/covers/*.jpg");
+$pool = $files;
+$files = glob("/home/fabio/Documents/{imgen/db/1024x576/}*.jpg",GLOB_BRACE);
+
+$srand = fn($k) => srand(date('Ymd').crc32(getenv($k)?:uniqid()));
+
+$files = $pool;
+$srand('ws');
 shuffle($files);
 $wallImage = imagecreatefromjpeg($files[0]);
-$groundImage = imagecreatefromjpeg($files[0]);
-$ceilingImage = imagecreatefromjpeg($files[mt_rand(0,1)]);
+$wallImage2 = imagecreatefromjpeg($files[0]);
+
+
+$srand('gs');
+$files = $pool;
+shuffle($files);
+$groundImage = imagecreatefromjpeg($files[1]);
+
+$srand('cs');
+$files = $pool;
+shuffle($files);
+$ceilingImage = imagecreatefromjpeg($files[2]);
 
 
 // Image dimensions
-$imageWidth = 1200;
-$imageHeight = 1200;
+$imageWidth = 1024;
+$imageHeight = 576;
 
+//$imageWidth = 1400;
+//$imageHeight = 1400;
+
+$srand('ms');
 $path = generatePath($maze, $playerX, $playerY);
 
 $path = array_map(fn($x) => [$x+.5, 10.5], range(1, 28));
-$playerDir = -.5;
+$playerDir = mt_rand(-5, 5) / 10;
 $inc = .1;
 $playerX = [1, 10];
 
 $rotate = false;
+$wallImageOrig = $wallImage;
+$n_frames = getenv('n') ?: 1;
 foreach($path as $i => $coords){
 
-	if($i === 29) break;
+	if($i === $n_frames) break;
 	echo "Rendering frame $i\n";
 
 	list($playerX, $playerY) = $coords;
@@ -128,8 +153,9 @@ foreach($path as $i => $coords){
 	// Fill the ground and ceiling
 	$groundHeight = $imageHeight / 2;
 	$ceilingHeight = $imageHeight / 2;
-//	imagecopyresampled($canvas, $groundImage, 0, $groundHeight, 0, 0, $imageWidth, $groundHeight, imagesx($groundImage), imagesy($groundImage));
-//	imagecopyresampled($canvas, $ceilingImage, 0, 0, 0, 0, $imageWidth, $ceilingHeight, imagesx($ceilingImage), imagesy($ceilingImage));
+
+ imagecopyresampled($canvas, $groundImage, 0, $groundHeight, 0, 0, $imageWidth, $groundHeight, imagesx($groundImage), imagesy($groundImage));
+   	imagecopyresampled($canvas, $ceilingImage, 0, 0, 0, 0, $imageWidth, $ceilingHeight, imagesx($ceilingImage), imagesy($ceilingImage));
 
 	// Raycasting
 	for ($x = 0; $x < $imageWidth; $x++) {
@@ -179,6 +205,7 @@ foreach($path as $i => $coords){
 	    } else {
 	        $perpWallDist = ($mapY - $playerY + (1 - $stepY) / 2) / $rayDirY;
 	    }
+	    $perpWallDist /=1.1;
 
 	    // Calculate height of line to draw on screen
 	    $lineHeight = (int)($imageHeight / $perpWallDist);
@@ -219,7 +246,8 @@ foreach($path as $i => $coords){
 	    }
 	}
 
-	$canvas = imagerotate($canvas, $i * 5, null);
+//	$canvas = rotateSquareImage($canvas, $i * 5, null);
+//	$canvas = rotateSquareImage($canvas, 90, null);
 	
 	// Output the result
 	imagejpeg($canvas,'frames/'.$i.'.jpg');

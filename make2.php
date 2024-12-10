@@ -89,7 +89,9 @@ for($i=1;$i<=28;$i++){
 
 
 // Load textures
-$files = glob("1400x1400/*.jpg");
+//$files = glob("1400x1400/*.jpg");
+//$files = glob("/home/fabio/Documents/traumapacker/covers/*.jpg");
+$files = glob("/home/fabio/Documents/traumapacker/covers/*.jpg");
 shuffle($files);
    $wallTexture = imagecreatefromjpeg($files[0]);
     $floorTexture = imagecreatefromjpeg($files[0]);
@@ -97,13 +99,13 @@ shuffle($files);
  
 
 // Image dimensions
-$imageWidth = 1200;
-$imageHeight = 800;
+$imageWidth = 1024;
+$imageHeight = 576;
 
 $path = generatePath($maze, $playerX, $playerY);
 
 $path = array_map(fn($x) => [$x+.5, 10.5], range(1, 28));
-$playerDir = -.6;
+$playerDir = -.1;
 $playerX = [1, 10];
 
 $rotate = false;
@@ -116,7 +118,7 @@ foreach($path as $i => $coords){
 	list($playerX, $playerY) = $coords;
 
 	if(mt_rand(0,1))
-	$playerDir += $inc;
+//	$playerDir += $inc;
 
 	if($playerDir > .5) $inc = -.1;
 	elseif($playerDir < -.5) $inc = +.1;
@@ -130,8 +132,8 @@ foreach($path as $i => $coords){
     $textureWidth = imagesx($wallTexture);
     $textureHeight = imagesy($wallTexture);
 
-    $screenWidth = 640;
-    $screenHeight = 480;
+    $screenWidth = 1024;
+    $screenHeight = 576;
     $image = imagecreatetruecolor($screenWidth, $screenHeight);
 
     for ($x = 0; $x < $screenWidth; $x++) {
