@@ -115,11 +115,11 @@ $ceilingImage = imagecreatefromjpeg($files[2]);
 
 
 // Image dimensions
-$imageWidth = 1024;
-$imageHeight = 576;
+//$imageWidth = 1024;
+//$imageHeight = 576;
 
-//$imageWidth = 1400;
-//$imageHeight = 1400;
+$imageWidth = 1400;
+$imageHeight = 1400;
 
 $srand('ms');
 $path = generatePath($maze, $playerX, $playerY);
