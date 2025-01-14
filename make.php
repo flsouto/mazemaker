@@ -92,7 +92,7 @@ for($i=1;$i<=28;$i++){
 //$files = glob("../imgen/db/*/*.jpg");
 $files = glob("/home/fabio/Documents/traumapacker/covers/*.jpg");
 $pool = $files;
-$files = glob("/home/fabio/Documents/{imgen/db/1024x576/}*.jpg",GLOB_BRACE);
+//$files = glob("/home/fabio/Documents/{imgen/db/1024x576/}*.jpg",GLOB_BRACE);
 
 $srand = fn($k) => srand(date('Ymd').crc32(getenv($k)?:uniqid()));
 
@@ -118,9 +118,6 @@ $ceilingImage = imagecreatefromjpeg($files[2]);
 //$imageWidth = 1024;
 //$imageHeight = 576;
 
-$imageWidth = 1400;
-$imageHeight = 1400;
-
 $srand('ms');
 $path = generatePath($maze, $playerX, $playerY);
 
@@ -132,134 +129,150 @@ $playerX = [1, 10];
 $rotate = false;
 $wallImageOrig = $wallImage;
 $n_frames = getenv('n') ?: 1;
-foreach($path as $i => $coords){
 
-	if($i === $n_frames) break;
-	echo "Rendering frame $i\n";
+$sizes = [
+    [1400,1400],
+    [1024,576]
+];
 
-	list($playerX, $playerY) = $coords;
+$fx = explode(',',getenv('fx'));
 
-	if(mt_rand(0,1))
-//	$playerDir += $inc;
+foreach($sizes as $size){
+    [$imageWidth, $imageHeight] = $size;
 
-	if($playerDir > .5) $inc = -.1;
-	elseif($playerDir < -.5) $inc = +.1;
-	
+    foreach($path as $i => $coords){
+
+    	if($i === $n_frames) break;
+    	echo "Rendering frame $i for $size[0]x$size[1] \n";
+
+    	list($playerX, $playerY) = $coords;
+
+    //	if(mt_rand(0,1))
+    //	$playerDir += $inc;
+
+    	if($playerDir > .5) $inc = -.1;
+    	elseif($playerDir < -.5) $inc = +.1;
+    	
 
 
-	// Create a base image
-	$canvas = imagecreatetruecolor($imageWidth, $imageHeight);
+    	// Create a base image
+    	$canvas = imagecreatetruecolor($imageWidth, $imageHeight);
 
-	// Fill the ground and ceiling
-	$groundHeight = $imageHeight / 2;
-	$ceilingHeight = $imageHeight / 2;
+    	// Fill the ground and ceiling
+    	$groundHeight = $imageHeight / 2;
+    	$ceilingHeight = $imageHeight / 2;
 
- imagecopyresampled($canvas, $groundImage, 0, $groundHeight, 0, 0, $imageWidth, $groundHeight, imagesx($groundImage), imagesy($groundImage));
-   	imagecopyresampled($canvas, $ceilingImage, 0, 0, 0, 0, $imageWidth, $ceilingHeight, imagesx($ceilingImage), imagesy($ceilingImage));
+     imagecopyresampled($canvas, $groundImage, 0, $groundHeight, 0, 0, $imageWidth, $groundHeight, imagesx($groundImage), imagesy($groundImage));
+       	imagecopyresampled($canvas, $ceilingImage, 0, 0, 0, 0, $imageWidth, $ceilingHeight, imagesx($ceilingImage), imagesy($ceilingImage));
 
-	// Raycasting
-	for ($x = 0; $x < $imageWidth; $x++) {
-	    // Calculate ray position and direction
-	    $cameraX = 2 * $x / $imageWidth - 1;
-	    $rayDirX = cos($playerDir) + $cameraX * sin($playerDir);
-	    $rayDirY = sin($playerDir) - $cameraX * cos($playerDir);
+    	// Raycasting
+    	for ($x = 0; $x < $imageWidth; $x++) {
+    	    // Calculate ray position and direction
+    	    $cameraX = 2 * $x / $imageWidth - 1;
+    	    $rayDirX = cos($playerDir) + $cameraX * sin($playerDir);
+    	    $rayDirY = sin($playerDir) - $cameraX * cos($playerDir);
 
-	    // Which box of the map we're in
-	    $mapX = (int)$playerX;
-	    $mapY = (int)$playerY;
+    	    // Which box of the map we're in
+    	    $mapX = (int)$playerX;
+    	    $mapY = (int)$playerY;
 
-	    // Length of ray from current position to next x or y side
-	    $sideDistX = ($rayDirX < 0) ? ($playerX - $mapX) * abs(1 / $rayDirX) : ($mapX + 1.0 - $playerX) * abs(1 / $rayDirX);
-	    $sideDistY = ($rayDirY < 0) ? ($playerY - $mapY) * abs(1 / $rayDirY) : ($mapY + 1.0 - $playerY) * abs(1 / $rayDirY);
+    	    // Length of ray from current position to next x or y side
+    	    $sideDistX = ($rayDirX < 0) ? ($playerX - $mapX) * abs(1 / $rayDirX) : ($mapX + 1.0 - $playerX) * abs(1 / $rayDirX);
+    	    $sideDistY = ($rayDirY < 0) ? ($playerY - $mapY) * abs(1 / $rayDirY) : ($mapY + 1.0 - $playerY) * abs(1 / $rayDirY);
 
-	    // Length of ray from one x or y side to next x or y side
-	    $deltaDistX = abs(1 / $rayDirX);
-	    $deltaDistY = abs(1 / $rayDirY);
+    	    // Length of ray from one x or y side to next x or y side
+    	    $deltaDistX = abs(1 / $rayDirX);
+    	    $deltaDistY = abs(1 / $rayDirY);
 
-	    // What direction to step in x or y direction (either +1 or -1)
-	    $stepX = ($rayDirX < 0) ? -1 : 1;
-	    $stepY = ($rayDirY < 0) ? -1 : 1;
+    	    // What direction to step in x or y direction (either +1 or -1)
+    	    $stepX = ($rayDirX < 0) ? -1 : 1;
+    	    $stepY = ($rayDirY < 0) ? -1 : 1;
 
-	    $hit = 0; // Was there a wall hit?
-	    $side = 0; // Was a NS or a EW wall hit?
+    	    $hit = 0; // Was there a wall hit?
+    	    $side = 0; // Was a NS or a EW wall hit?
 
-	    // Perform DDA
-	    while ($hit == 0) {
-	        // Jump to next map square, OR in x-direction, OR in y-direction
-	        if ($sideDistX < $sideDistY) {
-	            $sideDistX += $deltaDistX;
-	            $mapX += $stepX;
-	            $side = 0;
-	        } else {
-	            $sideDistY += $deltaDistY;
-	            $mapY += $stepY;
-	            $side = 1;
-	        }
-	        // Check if ray has hit a wall
-	        if ($maze[$mapY][$mapX] > 0) $hit = 1;
-	    }
+    	    // Perform DDA
+    	    while ($hit == 0) {
+    	        // Jump to next map square, OR in x-direction, OR in y-direction
+    	        if ($sideDistX < $sideDistY) {
+    	            $sideDistX += $deltaDistX;
+    	            $mapX += $stepX;
+    	            $side = 0;
+    	        } else {
+    	            $sideDistY += $deltaDistY;
+    	            $mapY += $stepY;
+    	            $side = 1;
+    	        }
+    	        // Check if ray has hit a wall
+    	        if ($maze[$mapY][$mapX] > 0) $hit = 1;
+    	    }
 
-	    // Calculate distance projected on camera direction
-	    if ($side == 0) {
-	        $perpWallDist = ($mapX - $playerX + (1 - $stepX) / 2) / $rayDirX;
-	    } else {
-	        $perpWallDist = ($mapY - $playerY + (1 - $stepY) / 2) / $rayDirY;
-	    }
-	    $perpWallDist /=1.1;
+    	    // Calculate distance projected on camera direction
+    	    if ($side == 0) {
+    	        $perpWallDist = ($mapX - $playerX + (1 - $stepX) / 2) / $rayDirX;
+    	    } else {
+    	        $perpWallDist = ($mapY - $playerY + (1 - $stepY) / 2) / $rayDirY;
+    	    }
+    	    $perpWallDist /=1.1;
 
-	    // Calculate height of line to draw on screen
-	    $lineHeight = (int)($imageHeight / $perpWallDist);
+    	    // Calculate height of line to draw on screen
+    	    $lineHeight = (int)($imageHeight / $perpWallDist);
 
-	    // Calculate lowest and highest pixel to fill in current stripe
-	    $drawStart = -$lineHeight / 2 + $imageHeight / 2;
-	    if ($drawStart < 0) $drawStart = 0;
-	    $drawEnd = $lineHeight / 2 + $imageHeight / 2;
-	    if ($drawEnd >= $imageHeight) $drawEnd = $imageHeight - 1;
+    	    // Calculate lowest and highest pixel to fill in current stripe
+    	    $drawStart = -$lineHeight / 2 + $imageHeight / 2;
+    	    if ($drawStart < 0) $drawStart = 0;
+    	    $drawEnd = $lineHeight / 2 + $imageHeight / 2;
+    	    if ($drawEnd >= $imageHeight) $drawEnd = $imageHeight - 1;
 
-	    // Calculate which x-coordinate of the texture to use
-	    $wallX = ($side == 0) ? $playerY + $perpWallDist * $rayDirY : $playerX + $perpWallDist * $rayDirX;
-	    $wallX -= floor($wallX);
+    	    // Calculate which x-coordinate of the texture to use
+    	    $wallX = ($side == 0) ? $playerY + $perpWallDist * $rayDirY : $playerX + $perpWallDist * $rayDirX;
+    	    $wallX -= floor($wallX);
 
-	    // x-coordinate on the texture
-	    $texX = (int)($wallX * imagesx($wallImage));
-	    if ($side == 0 && $rayDirX > 0) $texX = imagesx($wallImage) - $texX - 1;
-	    if ($side == 1 && $rayDirY < 0) $texX = imagesx($wallImage) - $texX - 1;
+    	    // x-coordinate on the texture
+    	    $texX = (int)($wallX * imagesx($wallImage));
+    	    if ($side == 0 && $rayDirX > 0) $texX = imagesx($wallImage) - $texX - 1;
+    	    if ($side == 1 && $rayDirY < 0) $texX = imagesx($wallImage) - $texX - 1;
 
-	    // Draw the pixels of the stripe as a vertical line
-	    for ($y = $drawStart; $y < $drawEnd; $y++) {
-	        // Calculate y-coordinate on the texture
-	        $d = $y * 256 - $imageHeight * 128 + $lineHeight * 128;
-	        $texY = (($d * imagesy($wallImage)) / $lineHeight) / 256;
-	        // Get the color from the texture
-	        $color = imagecolorat($wallImage, $texX, $texY);
-	        if ($side == 1) {
-	            // Make color darker for y-sides
-	            $r = ($color >> 16) & 0xFF;
-	            $g = ($color >> 8) & 0xFF;
-	            $b = $color & 0xFF;
-	            $r = (int)($r / 1.5);
-	            $g = (int)($g / 1.5);
-	            $b = (int)($b / 1.5);
-	            $color = imagecolorallocate($canvas, $r, $g, $b);
-	        }
-	        imagesetpixel($canvas, $x, $y, $color);
-	    }
-	}
+    	    // Draw the pixels of the stripe as a vertical line
+    	    for ($y = $drawStart; $y < $drawEnd; $y++) {
+    	        // Calculate y-coordinate on the texture
+    	        $d = $y * 256 - $imageHeight * 128 + $lineHeight * 128;
+    	        $texY = (($d * imagesy($wallImage)) / $lineHeight) / 256;
+    	        // Get the color from the texture
+    	        $color = imagecolorat($wallImage, $texX, $texY);
+    	        if ($side == 1) {
+    	            // Make color darker for y-sides
+    	            $r = ($color >> 16) & 0xFF;
+    	            $g = ($color >> 8) & 0xFF;
+    	            $b = $color & 0xFF;
+    	            $r = (int)($r / 1.5);
+    	            $g = (int)($g / 1.5);
+    	            $b = (int)($b / 1.5);
+    	            $color = imagecolorallocate($canvas, $r, $g, $b);
+    	        }
+    	        imagesetpixel($canvas, $x, $y, $color);
+    	    }
+    	}
 
-//	$canvas = rotateSquareImage($canvas, $i * 5, null);
-//	$canvas = rotateSquareImage($canvas, 90, null);
-	
-	// Output the result
-	imagejpeg($canvas,'frames/'.$i.'.jpg');
+    //	$canvas = rotateSquareImage($canvas, $i * 5, null);
+    //	$canvas = rotateSquareImage($canvas, 90, null);
 
-	// Free up memory
-	imagedestroy($wallImage);
-	imagedestroy($groundImage);
-	imagedestroy($ceilingImage);
-	imagedestroy($canvas);
+    	// Output the result
+    	imagejpeg($canvas,$out='frames/'.implode('x',$size).'_'.$i.'.jpg');
+    	if($fx){
+        	foreach($fx as $f){
+        	    shell_exec("./$f $out /tmp/fx.jpg; mv /tmp/fx.jpg $out");
+        	}
+    	}
 
+    	// Free up memory
+    	imagedestroy($wallImage);
+    	imagedestroy($groundImage);
+    	imagedestroy($ceilingImage);
+    	imagedestroy($canvas);
+
+    }
 }
-
 
 
 ?>
