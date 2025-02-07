@@ -131,8 +131,8 @@ $wallImageOrig = $wallImage;
 $n_frames = getenv('n') ?: 1;
 
 $sizes = [
-    [1400,1400],
-    [1024,576]
+    [1024,576],
+    [1400,1400]
 ];
 
 $fx = explode(',',getenv('fx'));
@@ -261,7 +261,9 @@ foreach($sizes as $size){
     	imagejpeg($canvas,$out='frames/'.implode('x',$size).'_'.$i.'.jpg');
     	if($fx){
         	foreach($fx as $f){
-        	    shell_exec("./$f $out /tmp/fx.jpg; mv /tmp/fx.jpg $out");
+        	    if($f){
+            	    shell_exec("./$f $out /tmp/fx.jpg; mv /tmp/fx.jpg $out");
+        	    }
         	}
     	}
 
